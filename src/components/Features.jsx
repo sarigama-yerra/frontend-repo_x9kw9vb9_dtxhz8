@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Workflow, Shield, Palette, BarChart3, Rocket, Gauge, Bot, LayoutDashboard } from 'lucide-react'
+import { Shield, Palette, BarChart3, Gauge, Bot, LayoutDashboard } from 'lucide-react'
 
 const features = [
   {
