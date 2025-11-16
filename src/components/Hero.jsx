@@ -1,12 +1,43 @@
-import { useRef, Suspense, lazy } from 'react'
+import React, { useRef, useState, useCallback, Suspense, lazy, Component } from 'react'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 
+// Lazy load Spline to avoid blocking initial render
 const SplineLazy = lazy(() => import('@splinetool/react-spline').then(m => ({ default: m.default })))
+
+// A compact local error boundary that doesn't take over the whole page
+class CompactBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(err) {
+    if (this.props.onTrip) this.props.onTrip(err)
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full grid place-items-center text-pink-900/60">
+          <div className="text-center">
+            <div className="text-sm">Interactive 3D unavailable</div>
+            <div className="text-xs text-pink-900/50 mt-1">Falling back due to a load error.</div>
+          </div>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 export default function Hero() {
   const containerRef = useRef(null)
   const inView = useInView(containerRef, { margin: '-20% 0px -20% 0px', once: true })
   const prefersReduced = useReducedMotion()
+  const [failed3D, setFailed3D] = useState(false)
+
+  const handleTrip = useCallback(() => setFailed3D(true), [])
 
   return (
     <section ref={containerRef} className="relative pt-28 pb-16 md:pt-36 md:pb-24 overflow-hidden">
@@ -59,12 +90,19 @@ export default function Hero() {
           >
             <div className="relative rounded-[28px] overflow-hidden border border-white/60 bg-white/60 backdrop-blur-2xl shadow-2xl">
               <div className="aspect-[4/3]">
-                {!prefersReduced && inView ? (
-                  <Suspense fallback={<div className="w-full h-full grid place-items-center text-pink-900/60">Loading 3D…</div>}>
-                    <SplineLazy scene="https://prod.spline.design/dmI8cRa4YJ8oJUwX/scene.splinecode" />
-                  </Suspense>
+                {(!prefersReduced && inView && !failed3D) ? (
+                  <CompactBoundary onTrip={handleTrip}>
+                    <Suspense fallback={<div className="w-full h-full grid place-items-center text-pink-900/60">Loading 3D…</div>}>
+                      <SplineLazy scene="https://prod.spline.design/dmI8cRa4YJ8oJUwX/scene.splinecode" />
+                    </Suspense>
+                  </CompactBoundary>
                 ) : (
-                  <div className="w-full h-full grid place-items-center text-pink-900/60">3D preview</div>
+                  <div className="w-full h-full grid place-items-center text-pink-900/60">
+                    <div className="text-center">
+                      <div className="text-sm">Interactive 3D unavailable</div>
+                      <div className="text-xs text-pink-900/50 mt-1">{failed3D ? 'Falling back due to a load error.' : 'Showing static preview due to preferences.'}</div>
+                    </div>
+                  </div>
                 )}
               </div>
               <div className="absolute inset-0 pointer-events-none bg-gradient-to-tr from-white/10 to-transparent" />

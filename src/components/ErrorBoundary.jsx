@@ -26,7 +26,7 @@ export default class ErrorBoundary extends Component {
           <div className="max-w-lg w-full rounded-2xl border border-white/60 bg-white/70 backdrop-blur-2xl p-6 shadow-2xl text-center">
             <h2 className="text-2xl font-bold text-pink-950">Something went wrong</h2>
             <p className="mt-2 text-sm text-pink-900/80">The page encountered an error and stopped rendering. You can try reloading the section.</p>
-            {process.env.NODE_ENV !== 'production' && this.state.error && (
+            {import.meta.env.MODE !== 'production' && this.state.error && (
               <pre className="mt-4 text-left text-xs bg-rose-50 text-rose-700 p-3 rounded-lg overflow-auto max-h-48">
                 {String(this.state.error?.message || this.state.error)}
               </pre>
